@@ -30,19 +30,9 @@ PP::PP(int i,int j)
   this->j = j;
 }
 
-string PP::print(string lang = "vhdl")
+string PP::print(string lang = "")
 {
   string out = "";
-  if (lang.compare("vhdl") == 0)
-  {
-    if (this->i>=0 && this->j>=0)
-      out = "P("+to_string(this->i)+")("+to_string(this->j)+")";
-    if (this->i>=0 && this->j<0)
-      out = "S("+to_string(this->i)+")";
-    if (this->i<0 && this->j>=0)
-      out = "C("+to_string(this->j)+")";
-  }
-  else
   {
     if (this->i>=0 && this->j>=0)
       out = "P["+to_string(this->i)+"]["+to_string(this->j)+"]";
@@ -78,22 +68,9 @@ ADD::ADD(string a,string b,string cin,string s,string cout,int type)
   this->type = type;
 }
 
-string ADD::Print(int id,string lang = "vhdl")
+string ADD::Print(int id,string lang )
 {
   stringstream adder;
-  if (lang.compare("vhdl") == 0)
-  {
-    if (this->type==0)
-    {
-      adder << "  HA_"<< format_account_number(id) <<" : ha port map ("<<this->a<<","<<this->b<<","<<this->s<<","<<this->cout<<");";
-    }
-    else if (this->type==1)
-    {
-      adder << "  FA_"<< format_account_number(id) <<" : fa port map ("<<this->a<<","<<this->b<<","<<this->cin<<","<<this->s<<","<<this->cout<<");";
-    }
-  }
-  else
-  {
     if (this->type==0)
     {
       adder << "  ha HA_"<< format_account_number(id) <<" ("<<this->a<<","<<this->b<<","<<this->s<<","<<this->cout<<");";
@@ -102,7 +79,6 @@ string ADD::Print(int id,string lang = "vhdl")
     {
       adder << "  fa FA_"<< format_account_number(id) <<" ("<<this->a<<","<<this->b<<","<<this->cin<<","<<this->s<<","<<this->cout<<");";
     }
-  }
   return adder.str();
 }
 
@@ -572,78 +548,6 @@ void wallace_multiplier_reduction_schema(int N, int M)
 
 
 
-void vhdl_code_generation_schema(int type,int N, int M)
-{
-  int i,j;
-  int id = 0;
-  int AMOUNT = Adders.size();
-  stringstream filename;
-  string s_type = "";
-  if (type==0)
-  {
-    s_type = "wallace";
-  }
-  else if (type==1)
-  {
-    s_type = "dadda";
-  }
-  filename << s_type << ".vhd";
-  ofstream outfile(filename.str().c_str());
-  outfile << "library ieee;" << endl;
-  outfile << "use ieee.std_logic_1164.all;" << endl;
-  outfile << "use ieee.numeric_std.all;" << endl;
-  outfile << "use work.libs.all;" << endl;
-  outfile << endl;
-  outfile << "entity " << s_type << " is" << endl;
-  outfile << "port" << endl;
-  outfile << "  (" << endl;
-  outfile << "    x             : in  std_logic_vector(" << to_string(N-1) << " downto 0);" << endl;
-  outfile << "    y             : in  std_logic_vector(" << to_string(M-1) << " downto 0);" << endl;
-  outfile << "    z0            : out std_logic_vector(" << to_string(N+M-1) << " downto 0);" << endl;
-  outfile << "    z1            : out std_logic_vector(" << to_string(N+M-1) << " downto 0)" << endl;
-  outfile << "  );" << endl;
-  outfile << "end " << s_type << ";" << endl;
-  outfile << endl;
-  outfile << "architecture behavior of " << s_type <<" is" << endl;
-  outfile << endl;
-  outfile << "type mul_type is array (0 to " << to_string(N-1) <<") of std_logic_vector(" << to_string(M-1) <<" downto 0);" << endl;
-  outfile << endl;
-  outfile << "signal P : mul_type;" << endl;
-  outfile << endl;
-  outfile << "signal S : std_logic_vector("+to_string(AMOUNT-1)+" downto 0);" << endl;
-  outfile << "signal C : std_logic_vector("+to_string(AMOUNT-1)+" downto 0);" << endl;
-  outfile << endl;
-  outfile << "begin" << endl;
-  outfile << endl;
-  for (i=0; i<N; i++)
-  {
-    for (j=0; j<M; j++)
-    {
-      outfile << "  P("<<i<<")("<<j<<") <= x("<<i<<") and y("<<j<<");" << endl;
-    }
-  }
-  outfile << endl;
-  for (auto v : Adders)
-  {
-    outfile << v.Print(id) << endl;
-    ++id;
-  }
-  outfile << endl;
-  for (i=0; i<2; i++)
-  {
-    for (j=0; j<N+M; j++)
-    {
-      if (PP_Matrix[i][j].i < 0 && PP_Matrix[i][j].j < 0 )
-        outfile << "  z" << to_string(i) << "(" << to_string(j) + ") <= '0';" << endl;
-      else
-        outfile << "  z" << to_string(i) << "(" << to_string(j) + ") <= " << PP_Matrix[i][j].print() << ";" << endl;
-    }
-  }
-  outfile << endl;
-  outfile << "end architecture;" << endl;
-  outfile.close();
-}
-
 
 
 void verilog_code_generation_schema(int type,int N, int M)
@@ -663,30 +567,35 @@ void verilog_code_generation_schema(int type,int N, int M)
   {
     s_type = "dadda";
   }
-  filename << s_type << ".sv";
+  filename << s_type << ".v";
   ofstream outfile(filename.str().c_str());
   outfile << "module " << s_type << endl;
   outfile << "(" << endl;
-  outfile << "  input  logic [" << to_string(N-1) << " : 0] x," << endl;
-  outfile << "  input  logic [" << to_string(M-1) << " : 0] y," << endl;
-  outfile << "  output logic [" << to_string(N+M-1) << " : 0] z0," << endl;
-  outfile << "  output logic [" << to_string(N+M-1) << " : 0] z1"<< endl;
+  outfile << "  input  [" << to_string(N-1) << " : 0] x," << endl;
+  outfile << "  input  [" << to_string(M-1) << " : 0] y," << endl;
+  outfile << "  output [" << to_string(N+M-1) << " : 0] z0," << endl;
+  outfile << "  output [" << to_string(N+M-1) << " : 0] z1"<< endl;
   outfile << ");" << endl;
-  outfile << "  timeunit 1ps;" << endl;
-  outfile << "  timeprecision 1ps;" << endl;
   outfile << endl;
-  outfile << "  logic [" << to_string(M-1) << " : 0] P [0 : " << to_string(N-1) << "];" << endl;
+  outfile << "  wire [" << to_string(M-1) << " : 0] P [0 : " << to_string(N-1) << "];" << endl;
   outfile << endl;
-  outfile << "  logic [" << to_string(AMOUNT-1) << " : 0] S;" << endl;
-  outfile << "  logic [" << to_string(AMOUNT-1) << " : 0] C;" << endl;
+  outfile << "  wire [" << to_string(AMOUNT-1) << " : 0] S;" << endl;
+  outfile << "  wire [" << to_string(AMOUNT-1) << " : 0] C;" << endl;
   outfile << endl;
-  for (i=0; i<N; i++)
+  for (i=0; i<N-1; i++)
   {
-    for (j=0; j<M; j++)
+    for (j=0; j<M-1; j++)
     {
-      outfile << "  assign P["<<i<<"]["<<j<<"] = x["<<i<<"] & y["<<j<<"];" << endl;
+      outfile << "  assign P["<<i<<"]["<<j<<"] = (x["<<i<<"] & y["<<j<<"]);" << endl;
     }
+    outfile << "  assign P["<<i<<"]["<<j<<"] = ~(x["<<i<<"] & y["<<j<<"]);" << endl;
   }
+  for (j=0; j<M-1; j++)
+    {
+      outfile << "  assign P["<<i<<"]["<<j<<"] = ~(x["<<i<<"] & y["<<j<<"]);" << endl;
+    }
+  outfile << "  assign P["<<i<<"]["<<j<<"] = (x["<<i<<"] & y["<<j<<"]);" << endl;
+
   outfile << endl;
   for (auto v : Adders)
   {
@@ -783,6 +692,5 @@ int main(int argc, char *argv[])
   {
     dadda_multiplier_reduction_schema(N,M);
   }
-  vhdl_code_generation_schema(type,N,M);
   verilog_code_generation_schema(type,N,M);
 }
