@@ -567,7 +567,7 @@ void verilog_code_generation_schema(int type,int N, int M)
   {
     s_type = "dadda";
   }
-  filename << s_type << ".v";
+  filename << "../cells/" << s_type << ".v";
   ofstream outfile(filename.str().c_str());
   outfile << "module " << s_type << endl;
   outfile << "(" << endl;
