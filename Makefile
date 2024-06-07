@@ -1,10 +1,10 @@
 CXX = g++
-OBJ = multiply_tree
-SRC = multiply_tree.cpp
+OBJ = generate_PPM
+SRC = generate_PPM.cpp
 CFLAGS = -O3
 
 all:
-	$(CXX) $(CFLAGS) -o $(OBJ) $(SRC)
+	$(CXX) $(CFLAGS) -o ../FB42DSP/$(OBJ) $(SRC)
 
 debug:
 	$(CXX) -g -DDEBUG $(CFLAGS) -o $(OBJ) $(SRC)

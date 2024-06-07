@@ -635,62 +635,42 @@ int main(int argc, char *argv[])
   int N = -1;
   int M = -1;
   int i = 0;
-  if (argc < 4)
+  if (argc < 3)
   {
-      cout << "Usage: " << argv[0] << " <type>" << " <N>" << " <M> " << endl;
-      cout << "Valid types: <dadda> or <wallace>" << endl;
+      cout << "Usage: " << argv[0] << " <N>" << " <M> " << endl;
       cout << "Valid N,M: e.g. <32,64> for 32x64 binary multiplication" << endl;
       return 0;
   }
-  if (!strcmp(argv[1],"wallace"))
-  {
-    cout << "Wallace-Tree choosen!" << endl;
-    type = 0;
-  }
-  else if (!strcmp(argv[1],"dadda"))
-  {
-    cout << "Dadda-Tree choosen!" << endl;
-    type = 1;
-  }
-  else
-  {
-    cout << "Invalid type choosen!" << endl;
-    return 0;
-  }
   i=0;
-  for (; argv[2][i] != 0; i++)
+  for (; argv[1][i] != 0; i++)
   {
-      if (!isdigit(argv[2][i]))
+      if (!isdigit(argv[1][i]))
       {
         cout << "Invalid N given!" << endl;
         return 0;
       }
   }
   i=0;
-  for (; argv[3][i] != 0; i++)
+  for (; argv[2][i] != 0; i++)
   {
-      if (!isdigit(argv[3][i]))
+      if (!isdigit(argv[2][i]))
       {
         cout << "Invalid M given!" << endl;
         return 0;
       }
   }
-  stringstream dimN(argv[2]);
+  stringstream dimN(argv[1]);
   dimN >> N;
-  stringstream dimM(argv[3]);
+  stringstream dimM(argv[2]);
   dimM >> M;
 
   cout << "Multipy-Tree N: " << N << " M: " << M << endl;
 
-  partial_product_generation_schema(type,N,M);
+  partial_product_generation_schema(1,N,M);
+  partial_product_generation_schema(1,N,M);
   print_matrix(N,M);
-  if (type == 0)
-  {
-    wallace_multiplier_reduction_schema(N,M);
-  }
-  else if (type == 1)
-  {
-    dadda_multiplier_reduction_schema(N,M);
-  }
-  verilog_code_generation_schema(type,N,M);
+  //wallace_multiplier_reduction_schema(N,M);
+  dadda_multiplier_reduction_schema(N,M);
+  verilog_code_generation_schema(0,N,M);
+  verilog_code_generation_schema(1,N,M);
 }
